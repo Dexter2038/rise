@@ -1,9 +1,3 @@
-use inquire::{MultiSelect, Select};
-
-use super::render::get_render_cfg;
-
-use super::BuildConfig;
-
 #[derive(Default)]
 pub struct WebAppConfig {
     pub kind: Option<WebApp>,
@@ -15,196 +9,14 @@ pub struct WebAppConfig {
     pub features: Vec<Features>,
 }
 
-impl BuildConfig for WebAppConfig {
-    fn build(&mut self) -> Result<(), Box<dyn std::error::Error>> {
-        let kind = Select::new(
-            "Select a webapp kind",
-            vec![WebApp::Backend, WebApp::Frontend, WebApp::Fullstack],
-        )
-        .with_render_config(get_render_cfg())
-        .prompt()?;
-        self.set_kind(kind);
-
-        if let Some(backends) = self.get_backends_options() {
-            let backend = Select::new("Select a backend", backends)
-                .with_render_config(get_render_cfg())
-                .prompt()?;
-
-            self.set_backend(backend);
-        }
-
-        if let Some(frontends) = self.get_frontends_options() {
-            let frontend = Select::new("Select a frontend tech", frontends)
-                .with_render_config(get_render_cfg())
-                .prompt()?;
-
-            self.set_frontend(frontend);
-        }
-
-        if let Some(databases) = self.get_databases_options() {
-            let database = Select::new("Select a database", databases)
-                .with_render_config(get_render_cfg())
-                .prompt()?;
-
-            self.set_database(database);
-        }
-
-        if let Some(deployments) = self.get_deployment_options() {
-            let deployment = Select::new("Select a deployment option", deployments)
-                .with_render_config(get_render_cfg())
-                .prompt()?;
-
-            self.set_deployment(deployment);
-        }
-
-        if let Some(testings) = self.get_testing_options() {
-            let testings = MultiSelect::new("Select testing options", testings)
-                .with_render_config(get_render_cfg())
-                .prompt()?;
-
-            self.add_testings(testings);
-        }
-
-        if let Some(features) = self.get_features_options() {
-            let features = MultiSelect::new("Select features", features)
-                .with_render_config(get_render_cfg())
-                .prompt()?;
-
-            self.add_features(features);
-        }
-        Ok(())
-    }
-}
-
-impl WebAppConfig {
-    pub fn get_backends_options(&self) -> Option<Vec<Backend>> {
-        if self.kind.clone().unwrap() == WebApp::Frontend {
-            return None;
-        }
-        vec![
-            Backend::Actix,
-            Backend::Axum,
-            Backend::Rocket,
-            Backend::Warp,
-            Backend::Tide,
-            Backend::Salvo,
-            Backend::Gotham,
-        ]
-        .into()
-    }
-    pub fn get_frontends_options(&self) -> Option<Vec<Frontend>> {
-        if self.kind.clone().unwrap() == WebApp::Backend {
-            return None;
-        }
-        let common_frontends = vec![
-            Frontend::Svelte,
-            Frontend::React,
-            Frontend::Vue,
-            Frontend::Minijinja,
-            Frontend::Handlebars,
-        ];
-
-        match self.backend {
-            Some(_) => {
-                let backend_specific_frontends =
-                    vec![Frontend::Yew, Frontend::Tera, Frontend::Askama];
-                Some([common_frontends, backend_specific_frontends].concat())
-            }
-            None => {
-                let no_backend_frontends = vec![Frontend::Leptos, Frontend::Seed, Frontend::Sauron];
-                Some([common_frontends, no_backend_frontends].concat())
-            }
-        }
-    }
-
-    #[allow(clippy::all)]
-    pub fn get_databases_options(&self) -> Option<Vec<Database>> {
-        match self.backend {
-            Some(_) => Some(vec![
-                Database::SQLx,
-                Database::Diesel,
-                Database::SeaORM,
-                Database::Sled,
-            ]),
-            None => None,
-        }
-    }
-
-    pub fn get_deployment_options(&self) -> Option<Vec<Deployment>> {
-        match (self.backend.clone(), self.frontend.clone()) {
-            (
-                None,
-                Some(
-                    Frontend::Tera | Frontend::Askama | Frontend::Minijinja | Frontend::Handlebars,
-                ),
-            ) => None,
-            _ => Some(vec![
-                Deployment::Docker,
-                Deployment::Kubernetes,
-                Deployment::Serverless,
-                Deployment::SelfHosted,
-            ]),
-        }
-    }
-
-    #[allow(clippy::all)]
-    pub fn get_testing_options(&self) -> Option<Vec<Testing>> {
-        match self.backend {
-            Some(_) => Some(vec![Testing::Api, Testing::SQLx, Testing::Mock]),
-            None => None,
-        }
-    }
-
-    #[allow(clippy::all)]
-    pub fn get_features_options(&self) -> Option<Vec<Features>> {
-        match self.backend {
-            Some(_) => Some(vec![
-                Features::WebSockets,
-                Features::gRPC,
-                Features::GraphQL,
-                Features::RateLimiting,
-            ]),
-            None => None,
-        }
-    }
-
-    pub fn set_kind(&mut self, kind: WebApp) {
-        self.kind = Some(kind);
-    }
-
-    pub fn set_backend(&mut self, backend: Backend) {
-        self.backend = Some(backend);
-    }
-
-    pub fn set_frontend(&mut self, frontend: Frontend) {
-        self.frontend = Some(frontend);
-    }
-
-    pub fn set_database(&mut self, database: Database) {
-        self.database = Some(database);
-    }
-
-    pub fn set_deployment(&mut self, deployment: Deployment) {
-        self.deployment = Some(deployment);
-    }
-
-    pub fn add_testings(&mut self, testings: Vec<Testing>) {
-        self.testings.extend(testings);
-    }
-
-    pub fn add_features(&mut self, feature: Vec<Features>) {
-        self.features.extend(feature);
-    }
-}
-
-#[derive(strum_macros::Display, PartialEq, Clone, Copy)]
+#[derive(strum_macros::Display, PartialEq, Clone, Copy, strum_macros::EnumIter)]
 pub enum WebApp {
     Backend,
     Frontend,
     Fullstack,
 }
 
-#[derive(strum_macros::Display, Clone, Copy)]
+#[derive(strum_macros::Display, Clone, Copy, strum_macros::EnumIter)]
 pub enum Backend {
     Actix,
     Axum,
@@ -215,7 +27,7 @@ pub enum Backend {
     Gotham,
 }
 
-#[derive(strum_macros::Display, Clone, Copy)]
+#[derive(strum_macros::Display, Clone, Copy, PartialEq)]
 pub enum Frontend {
     Yew,
     Leptos,
@@ -230,7 +42,7 @@ pub enum Frontend {
     Handlebars,
 }
 
-#[derive(strum_macros::Display, Clone, Copy)]
+#[derive(strum_macros::Display, Clone, Copy, strum_macros::EnumIter)]
 pub enum Database {
     SQLx,
     Diesel,
@@ -238,7 +50,7 @@ pub enum Database {
     Sled,
 }
 
-#[derive(strum_macros::Display, Clone, Copy)]
+#[derive(strum_macros::Display, Clone, Copy, strum_macros::EnumIter)]
 pub enum Deployment {
     Docker,
     Kubernetes,
@@ -246,14 +58,14 @@ pub enum Deployment {
     SelfHosted,
 }
 
-#[derive(strum_macros::Display, Clone, Copy)]
+#[derive(strum_macros::Display, Clone, Copy, strum_macros::EnumIter)]
 pub enum Testing {
     Api,
     SQLx,
     Mock,
 }
 
-#[derive(strum_macros::Display, Clone, Copy)]
+#[derive(strum_macros::Display, Clone, Copy, strum_macros::EnumIter)]
 #[allow(non_camel_case_types)]
 pub enum Features {
     WebSockets,

@@ -1,10 +1,12 @@
+use crate::cli::project::prompt_project_config;
 use crate::color::{EMBER_RED, FERRIS_TEAL, JET_BLACK, PURE_WHITE, RUST_ORANGE, STEEL_GRAY};
 
 use colored::Colorize;
-use config::project::ProjectConfig;
 
+mod cli;
 mod color;
 mod config;
+mod templates;
 
 pub fn run() -> Result<(), Box<dyn std::error::Error>> {
     println!(
@@ -14,7 +16,7 @@ pub fn run() -> Result<(), Box<dyn std::error::Error>> {
         "fast, idiomatic, async Rust scaffolding".custom_color(STEEL_GRAY)
     );
 
-    let project = ProjectConfig::new()?;
+    let project = prompt_project_config()?;
 
     Ok(())
 }
