@@ -1,6 +1,6 @@
-#![allow(unused_imports)]
-use crate::color::{EMBER_RED, FERRIS_TEAL, JET_BLACK, PURE_WHITE, RUST_ORANGE, STEEL_GRAY};
 use inquire::ui::{RenderConfig, StyleSheet};
+
+use crate::color::{RUST_ORANGE, STEEL_GRAY};
 
 pub fn get_render_cfg() -> RenderConfig<'static> {
     let option_style = StyleSheet::default().with_fg(STEEL_GRAY.into());

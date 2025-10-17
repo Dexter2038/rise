@@ -1,6 +1,6 @@
 use inquire::{MultiSelect, Select};
 
-use crate::config::get_render_cfg;
+use super::render::get_render_cfg;
 
 use super::BuildConfig;
 
@@ -16,67 +16,63 @@ pub struct WebAppConfig {
 }
 
 impl BuildConfig for WebAppConfig {
-    fn build() -> Result<Self, Box<dyn std::error::Error>>
-    where
-        Self: Sized,
-    {
-        let mut config = Self::default();
+    fn build(&mut self) -> Result<(), Box<dyn std::error::Error>> {
         let kind = Select::new(
             "Select a webapp kind",
             vec![WebApp::Backend, WebApp::Frontend, WebApp::Fullstack],
         )
         .with_render_config(get_render_cfg())
         .prompt()?;
-        config.set_kind(kind);
+        self.set_kind(kind);
 
-        if let Some(backends) = config.get_backends_options() {
+        if let Some(backends) = self.get_backends_options() {
             let backend = Select::new("Select a backend", backends)
                 .with_render_config(get_render_cfg())
                 .prompt()?;
 
-            config.set_backend(backend);
+            self.set_backend(backend);
         }
 
-        if let Some(frontends) = config.get_frontends_options() {
+        if let Some(frontends) = self.get_frontends_options() {
             let frontend = Select::new("Select a frontend tech", frontends)
                 .with_render_config(get_render_cfg())
                 .prompt()?;
 
-            config.set_frontend(frontend);
+            self.set_frontend(frontend);
         }
 
-        if let Some(databases) = config.get_databases_options() {
+        if let Some(databases) = self.get_databases_options() {
             let database = Select::new("Select a database", databases)
                 .with_render_config(get_render_cfg())
                 .prompt()?;
 
-            config.set_database(database);
+            self.set_database(database);
         }
 
-        if let Some(deployments) = config.get_deployment_options() {
+        if let Some(deployments) = self.get_deployment_options() {
             let deployment = Select::new("Select a deployment option", deployments)
                 .with_render_config(get_render_cfg())
                 .prompt()?;
 
-            config.set_deployment(deployment);
+            self.set_deployment(deployment);
         }
 
-        if let Some(testings) = config.get_testing_options() {
+        if let Some(testings) = self.get_testing_options() {
             let testings = MultiSelect::new("Select testing options", testings)
                 .with_render_config(get_render_cfg())
                 .prompt()?;
 
-            config.add_testings(testings);
+            self.add_testings(testings);
         }
 
-        if let Some(features) = config.get_features_options() {
+        if let Some(features) = self.get_features_options() {
             let features = MultiSelect::new("Select features", features)
                 .with_render_config(get_render_cfg())
                 .prompt()?;
 
-            config.add_features(features);
+            self.add_features(features);
         }
-        Ok(config)
+        Ok(())
     }
 }
 
@@ -201,14 +197,14 @@ impl WebAppConfig {
     }
 }
 
-#[derive(strum_macros::Display, PartialEq, Clone)]
+#[derive(strum_macros::Display, PartialEq, Clone, Copy)]
 pub enum WebApp {
     Backend,
     Frontend,
     Fullstack,
 }
 
-#[derive(Clone, strum_macros::Display)]
+#[derive(strum_macros::Display, Clone, Copy)]
 pub enum Backend {
     Actix,
     Axum,
@@ -219,7 +215,7 @@ pub enum Backend {
     Gotham,
 }
 
-#[derive(Clone, strum_macros::Display)]
+#[derive(strum_macros::Display, Clone, Copy)]
 pub enum Frontend {
     Yew,
     Leptos,
@@ -234,7 +230,7 @@ pub enum Frontend {
     Handlebars,
 }
 
-#[derive(strum_macros::Display)]
+#[derive(strum_macros::Display, Clone, Copy)]
 pub enum Database {
     SQLx,
     Diesel,
@@ -242,7 +238,7 @@ pub enum Database {
     Sled,
 }
 
-#[derive(strum_macros::Display)]
+#[derive(strum_macros::Display, Clone, Copy)]
 pub enum Deployment {
     Docker,
     Kubernetes,
@@ -250,14 +246,14 @@ pub enum Deployment {
     SelfHosted,
 }
 
-#[derive(strum_macros::Display)]
+#[derive(strum_macros::Display, Clone, Copy)]
 pub enum Testing {
     Api,
     SQLx,
     Mock,
 }
 
-#[derive(strum_macros::Display)]
+#[derive(strum_macros::Display, Clone, Copy)]
 #[allow(non_camel_case_types)]
 pub enum Features {
     WebSockets,
